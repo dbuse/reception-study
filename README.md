@@ -44,3 +44,9 @@ Next Steps and furhter Ideas
 	- this should give me some insights on how strong interference could be, and how distance plays into this
 	- also with varying parameters for transmit power and so on
 	- later maybe plan an extension with some kind of obstacles (road canyons?)
+
+Literature
+----------
+
+- [Bastian Bloessl and Aisling O'Driscoll, "A Case for Good Defaults: Pitfalls in VANET Physical Layer Simulations," Proceedings of IFIP Wireless Days (WD 2019), Manchester, United Kingdom, April 2019. ](https://www2.tkn.tu-berlin.de/bib/bloessl2019case/)
+- [Thales Teixeira de Almeida, Lucas de Carvalho Gomes, Fernando Molano Ortiz, José Geraldo Ribeiro Júnior and Luis Henrique M. K. Consta, "Comparative Analysis of a Vehicular Safety Application in NS-3 and Veins," IEEE Transactions on Intelligent Transportation Systems (TITS), August 2020. ](https://www2.tkn.tu-berlin.de/bib/teixeirade2020comparative/)
