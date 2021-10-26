@@ -1,0 +1,15 @@
+<routes>
+
+	<!-- Vehicles -->
+	<vType id="senderType" maxSpeed="0.00000001" color="red"/>
+	<vType id="receiverType" maxSpeed="1" color="blue" sigma="0"/>
+
+	<!-- Routes -->
+	<route id="freeway" edges="intermediate freeway" />
+	<route id="freewayR" edges="intermediateR freewayR" />
+
+	<!-- Vehicles -->
+	<trip id="receiver" departLane="0" departPos="10" departSpeed="1" from="intermediate" to="freeway" type="receiverType" depart="0" />
+	<trip id="sender" departLane="0" departPos="0" departSpeed="0" from="intermediate" to="freeway" type="senderType" depart="1" />
+
+</routes>
