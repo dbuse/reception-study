@@ -37,6 +37,8 @@
 
 #include "veins/base/toolbox/SignalUtils.h"
 
+#include "veins/modules/phy/PhyLayer80211p.h"
+
 using namespace veins;
 
 simtime_t Decider80211p::processNewSignal(AirFrame* msg)
@@ -312,6 +314,14 @@ simtime_t Decider80211p::processSignalEnd(AirFrame* msg)
             result = new DeciderResult80211(false, 0, 0, recvPower_dBm);
         }
     }
+
+    // record some data
+    auto* phyMod = check_and_cast<PhyLayer80211p*>(phy);
+    auto* res11p = check_and_cast<DeciderResult80211*>(result);
+    phyMod->emit(PhyLayer80211p::sigRSSIdBm, res11p->getRecvPower_dBm());
+    phyMod->emit(PhyLayer80211p::sigSNR, res11p->getSnr());
+    phyMod->emit(PhyLayer80211p::sigCorrect, res11p->isSignalCorrect());
+    phyMod->emit(PhyLayer80211p::sigDetected, !frame->getUnderMinPowerLevel());
 
     if (result->isSignalCorrect()) {
         EV_TRACE << "packet was received correctly, it is now handed to upper layer...\n";

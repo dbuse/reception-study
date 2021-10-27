@@ -46,6 +46,11 @@ using std::unique_ptr;
 
 Define_Module(veins::PhyLayer80211p);
 
+const simsignal_t PhyLayer80211p::sigRSSIdBm = registerSignal("org_car2x_veins_modules_phy80211p_sigRSSIdBm");
+const simsignal_t PhyLayer80211p::sigSNR = registerSignal("org_car2x_veins_modules_phy80211p_sigSNR");
+const simsignal_t PhyLayer80211p::sigDetected = registerSignal("org_car2x_veins_modules_phy80211p_sigDetected");
+const simsignal_t PhyLayer80211p::sigCorrect = registerSignal("org_car2x_veins_modules_phy80211p_sigCorrect");
+
 void PhyLayer80211p::initialize(int stage)
 {
     if (stage == 0) {

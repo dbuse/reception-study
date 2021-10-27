@@ -44,4 +44,14 @@ simple PhyLayer80211p extends BasePhyLayer
         //decides whether aborting the simulation or not if the MAC layer
         //requires phy to transmit a frame while currently receiveing another
         bool allowTxDuringRx = default(false);
+
+        @signal[org_car2x_veins_modules_phy80211p_sigRSSIdBm](type=double);
+        @statistic[RSSIdBm](source=org_car2x_veins_modules_phy80211p_sigRSSIdBm; record=vector);
+        @signal[org_car2x_veins_modules_phy80211p_sigSNR](type=double);
+        @statistic[SNR](source=org_car2x_veins_modules_phy80211p_sigSNR; record=vector);
+        @signal[org_car2x_veins_modules_phy80211p_sigDetected](type=bool);
+        @statistic[Detected](source=org_car2x_veins_modules_phy80211p_sigDetected; record=vector);
+        @signal[org_car2x_veins_modules_phy80211p_sigCorrect](type=bool);
+        @statistic[Correct](source=org_car2x_veins_modules_phy80211p_sigCorrect; record=vector);
+
 }

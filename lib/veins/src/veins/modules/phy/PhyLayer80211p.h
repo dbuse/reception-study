@@ -66,6 +66,11 @@ public:
      */
     void requestChannelStatusIfIdle() override;
 
+    static const simsignal_t sigRSSIdBm;
+    static const simsignal_t sigSNR;
+    static const simsignal_t sigDetected;
+    static const simsignal_t sigCorrect;
+
 protected:
     /** @brief CCA threshold. See Decider80211p for details */
     double ccaThreshold;
