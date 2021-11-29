@@ -16,6 +16,14 @@ def find_simulation_runs(wildcards):
     )
 
 
+def find_result_files(wildcards):
+    checkpoint_output = checkpoints.parse_configs.get(**wildcards).output[0]
+    return expand(
+        "results/{runnr}/Default-{runnr}.vec.csv.gz",
+        runnr=glob_wildcards(checkpoint_output + "/{runnr}/config.yaml").runnr
+    )
+
+
 def find_category_files(wildcards):
     checkpoint_output = checkpoints.parse_configs.get(**wildcards).output[0]
     return expand(
@@ -29,6 +37,7 @@ rule run_all_simulations:
     input:
         configs=find_simulation_runs
 
+# TODO: use better result directory structure
 rule merge_all_category_files:
     input:
         "all.modules.txt",
@@ -83,6 +92,43 @@ rule convert_result:
         lib/veins_scripts/eval/opp_extract_vecmodules.sh {input.vec} > {output.modules}
         lib/veins_scripts/eval/opp_extract_vecsignals.sh {input.vec} > {output.signals}
         """
+
+rule collect_results:
+    input:
+        result_files=find_result_files,
+        modules_file="all.modules.txt",
+        signals_file="all.signals.txt"
+    output:
+        "all.vec.parquet"
+    run:
+        import pandas as pd
+        import pyarrow as pa
+        import pyarrow.parquet as pq
+
+        modules_dtype = pd.CategoricalDtype(
+            pd.read_csv(input.modules_file, header=None, names=["modules"]).modules,
+            ordered=True,
+        )
+        signals_dtype = pd.CategoricalDtype(
+            pd.read_csv(input.signals_file, header=None, names=["signals"]).signals,
+            ordered=True,
+        )
+        columns = ["vecid", "module", "signal", "event", "time", "value"]
+        dtypes = {"module": modules_dtype, "signal": signals_dtype, "vecid": int, "event": int, "time": float, "value": float}
+
+        pqwriter = None
+        for runnr, file_name in enumerate(input.result_files):
+            df = pd.read_csv(file_name, sep=" ", names=columns, dtype=dtypes).assign(runnr=runnr)
+            table = pa.Table.from_pandas(df)
+            # for the first chunk of records
+            if pqwriter is None:
+                # create a parquet write object giving it an output file
+                pqwriter = pq.ParquetWriter(output[0], table.schema)
+            pqwriter.write_table(table)
+
+        if pqwriter is not None:
+            pqwriter.close()
+
 
 # TODO: extend for multiple configs, not just run numbers of one ("Default") config
 checkpoint parse_configs:
