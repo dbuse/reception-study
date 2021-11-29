@@ -1,5 +1,6 @@
-import re
+import glob
 import os
+import re
 import subprocess
 import yaml
 
@@ -49,3 +50,17 @@ rule run_simulation:
 rule run_all_simulations:
     input:
         configs=find_runconfigs
+
+rule build:
+    input: 
+        "lib/veins/src/Makefile",
+        [path for path in glob.glob('lib/veins/src/veins/**/*.*', recursive=True) if any(path.endswith(ext) for ext in ['msg', 'cc', 'h'])],
+    output: "lib/veins/src/libveins.so", "lib/veins/bin/veins_run"
+    threads: workflow.cores
+    shell: "cd lib/veins && make -j{threads}"
+
+
+rule configure:
+    input: "lib/veins/configure"  # Depends also on _set_ of files in src
+    output: "lib/veins/out/config.py", "lib/veins/src/Makefile"
+    shell: "cd lib/veins && ./configure"
