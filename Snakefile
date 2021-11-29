@@ -17,6 +17,37 @@ def find_runconfigs(wildcards):
     )
 
 
+rule run_all_simulations:
+    input:
+        configs=find_runconfigs
+
+rule build:
+    input:
+        "lib/veins/src/Makefile",
+        [path for path in glob.glob('lib/veins/src/veins/**/*.*', recursive=True) if any(path.endswith(ext) for ext in ['msg', 'cc', 'h'])],
+    output: "lib/veins/src/libveins.so", "lib/veins/bin/veins_run"
+    threads: workflow.cores
+    shell: "cd lib/veins && make -j{threads}"
+
+rule configure:
+    input: "lib/veins/configure"  # Depends also on _set_ of files in src
+    output: "lib/veins/out/config.py", "lib/veins/src/Makefile"
+    shell: "cd lib/veins && ./configure"
+
+
+rule run_simulation:
+    input:
+        "results/{runnr}/config.yaml",
+        rules.build.output
+    output:
+        flag=touch("results/{runnr}/done-flag.txt")
+    log: "results/{runnr}/omnetpp.log"
+    shell:
+        """
+        cd scenario
+        ../lib/veins/bin/veins_run -u Cmdenv -c Default -r {wildcards.runnr} --result-dir ../results/{wildcards.runnr}/ > ../{log}
+        """
+
 # TODO: extend for multiple configs, not just run numbers of one ("Default") config
 checkpoint parse_configs:
     input: "scenario/omnetpp.ini"
@@ -39,28 +70,3 @@ checkpoint parse_configs:
                 with open(f"{output[0]}/{runnr}/config.yaml", "w") as runfile:
                     yaml.dump(args, runfile)
 
-rule run_simulation:
-    input: "results/{runnr}/config.yaml"
-    output:
-        flag=touch("results/{runnr}/done-flag.txt")
-    log: "results/{runnr}/omnetpp.log"
-    shell: "cd scenario; ../lib/veins/bin/veins_run -u Cmdenv -c Default -r {wildcards.runnr} --result-dir ../results/{wildcards.runnr}/ > ../{log}"
-
-
-rule run_all_simulations:
-    input:
-        configs=find_runconfigs
-
-rule build:
-    input: 
-        "lib/veins/src/Makefile",
-        [path for path in glob.glob('lib/veins/src/veins/**/*.*', recursive=True) if any(path.endswith(ext) for ext in ['msg', 'cc', 'h'])],
-    output: "lib/veins/src/libveins.so", "lib/veins/bin/veins_run"
-    threads: workflow.cores
-    shell: "cd lib/veins && make -j{threads}"
-
-
-rule configure:
-    input: "lib/veins/configure"  # Depends also on _set_ of files in src
-    output: "lib/veins/out/config.py", "lib/veins/src/Makefile"
-    shell: "cd lib/veins && ./configure"
