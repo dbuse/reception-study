@@ -1,0 +1,5 @@
+# result and output directory
+results/
+
+# omnet artifacts
+scenario/.cmdenv-log
