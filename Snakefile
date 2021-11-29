@@ -8,8 +8,7 @@ from snakemake.utils import min_version
 
 min_version("5.4")  # for checkpoint support
 
-def find_runconfigs(wildcards):
-    x = 1
+def find_simulation_runs(wildcards):
     checkpoint_output = checkpoints.parse_configs.get(**wildcards).output[0]
     return expand(
         "results/{runnr}/done-flag.txt",
@@ -17,9 +16,28 @@ def find_runconfigs(wildcards):
     )
 
 
+def find_category_files(wildcards):
+    checkpoint_output = checkpoints.parse_configs.get(**wildcards).output[0]
+    return expand(
+        "results/{runnr}/Default-{runnr}.{category_type}.txt",
+        runnr=glob_wildcards(checkpoint_output + "/{runnr}/config.yaml").runnr,
+        category_type=wildcards.category_type,
+    )
+
+
 rule run_all_simulations:
     input:
-        configs=find_runconfigs
+        configs=find_simulation_runs
+
+rule merge_all_category_files:
+    input:
+        "all.modules.txt",
+        "all.signals.txt",
+
+rule merge_category_files:
+    input: find_category_files
+    output: "all.{category_type}.txt"
+    shell: "cat {input} | sort -u > {output}"
 
 rule build:
     input:
@@ -34,18 +52,36 @@ rule configure:
     output: "lib/veins/out/config.py", "lib/veins/src/Makefile"
     shell: "cd lib/veins && ./configure"
 
-
 rule run_simulation:
     input:
         "results/{runnr}/config.yaml",
         rules.build.output
     output:
-        flag=touch("results/{runnr}/done-flag.txt")
+        vec="results/{runnr}/Default-{runnr}.vec",
+        sca="results/{runnr}/Default-{runnr}.sca",
     log: "results/{runnr}/omnetpp.log"
     shell:
         """
         cd scenario
         ../lib/veins/bin/veins_run -u Cmdenv -c Default -r {wildcards.runnr} --result-dir ../results/{wildcards.runnr}/ > ../{log}
+        """
+
+rule convert_result:
+    input:
+        vec="results/{runnr}/Default-{runnr}.vec",
+        sca="results/{runnr}/Default-{runnr}.sca",
+    output:
+        vec="results/{runnr}/Default-{runnr}.vec.csv.gz",
+        sca="results/{runnr}/Default-{runnr}.sca.csv.gz",
+        modules="results/{runnr}/Default-{runnr}.modules.txt",
+        signals="results/{runnr}/Default-{runnr}.signals.txt",
+        flag=touch("results/{runnr}/done-flag.txt"),
+    shell:
+        """
+        lib/veins_scripts/eval/opp_vec2longcsv.sh {input.vec} | gzip > {output.vec}
+        lib/veins_scripts/eval/opp_sca2longcsv.sh {input.sca} | gzip > {output.sca}
+        lib/veins_scripts/eval/opp_extract_vecmodules.sh {input.vec} > {output.modules}
+        lib/veins_scripts/eval/opp_extract_vecsignals.sh {input.vec} > {output.signals}
         """
 
 # TODO: extend for multiple configs, not just run numbers of one ("Default") config
