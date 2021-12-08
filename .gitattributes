@@ -1,6 +1,1 @@
-# prune output and run-metadata from jupyter/ipython notebooks before git interaction (does not touch the working copy)
-*.ipynb filter=strip_notebook_output
-# add the following filter rule to your git config file (e.g., ~/.config/git/config)
-# jupyter-nbconvert needs to be enabled for that
-# [filter "strip_notebook_output"]
-#    clean = "jupyter-nbconvert --stdin --ClearOutputPreprocessor.enabled=True --to=notebook --stdout"
+
