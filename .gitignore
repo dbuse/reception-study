@@ -1,5 +1,8 @@
 # result and output directory
 results/
 
+# jupyter notebooks (tracked as .py or .md files via jupytext)
+*.ipynb
+
 # omnet artifacts
 scenario/.cmdenv-log
