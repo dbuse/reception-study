@@ -30,7 +30,7 @@ sns.set_theme(style='whitegrid')
 
 ```python
 def simple_path_loss(wavelength, distance, alpha):
-    return (wavelength  / (4 * np.pi * distance)) ** 2
+    return (wavelength  / (4 * np.pi * distance)) ** alpha
 ```
 
 ```python
