@@ -70,13 +70,31 @@ sns.lineplot(x=distances, y=path_loss_dBm, ax=right)
 left.set(yscale="log")
 ```
 
+### Free Space Path Loss with Higher *alpha* Values
+
+```python
+multi_alpha_path_loss = (
+    pd.DataFrame(
+        {
+            f"{cur_alpha:.1f}": mW2dBm(simple_path_loss(to_wavelength(center_frequency), distances, cur_alpha))
+            for cur_alpha in [2, 2.2, 2.5, 3.0, 3.5]
+        }
+    )
+    .assign(distance=distances)
+    .melt(id_vars=["distance"], var_name="alpha", value_name="path loss (dBm)")
+)
+fig, ax = plt.subplots(tight_layout=True, figsize=(12, 6))
+sns.lineplot(data=multi_alpha_path_loss, x="distance", y="path loss (dBm)", hue="alpha", ax=ax)
+ax.set(xscale="log")
+```
+
 ## With transceiver config
 
 ```python
 minPowerLevel_dBm = -98
 noiseLevel_dBm = -98
 
-transmit_powers_mW = [20, 100, 200]
+transmit_powers_mW = [20, 100, 200, 1000, 2000]
 
 def snr(signal_mW):
     return signal_mW / dBm2mW(noiseLevel_dBm)
