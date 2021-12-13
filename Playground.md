@@ -260,29 +260,6 @@ mid.set_xlim(left=pdr_change_boundaries.RSSIdBm.min() - 0.5, right=pdr_change_bo
 right.set_xlim(left=pdr_change_boundaries.SNRdB.min() - 0.5, right=pdr_change_boundaries.SNRdB.max() + 0.5)
 ```
 
-## Excursus: How dB changes when the base values change
-
-What happens with a number expressed in dB when the underlying absolute nubmer is doubled or halved?
-This should give me some intuition on how much interference or noise has to increase to have significant effects on decodability.
-
-```python
-base_number = pd.Series(2 ** np.arange(0, 8, 0.5))
-base_vs_dB = pd.DataFrame({"base": base_number, "dB": 10 * np.log10(base_number)})
-
-fig, (left, right) = plt.subplots(1, 2, figsize=(24, 4))
-base_vs_dB.plot(x="base", y="dB", ax=left)
-right.axis('off')
-right.table(cellText=base_vs_dB.round(2).values, colLabels=base_vs_dB.columns, loc='center')
-# base_vs_dB.head(8)
-```
-
-Result: Follow the rule of thumb **"doubling the base number adds 3 dB"**.
-
-Thus, halving the base number subtracts 3 dB.
-
-So, if there is *interference equal to the noise floor* (currently -98 dBm), then the SINR in dBm is *3 dB lower* than without any interference.
-
-
 ## WIP: Influence of Interference
 
 Now that I know about the basic behavior, I want to find out how increased interference could change the results.
@@ -446,11 +423,38 @@ For an actual message to come in, there are two options:
 <!-- #endregion -->
 
 ```python
+default_noise_dB = -98  # as configured
+safe_snr_dB = 7  # for QPSK 1/2
+
 worstcase_interferers = (
     pd.DataFrame({"num_interferers": range(1, 7)})
     .assign(interference_dB=lambda df: 10 * np.log10(df.num_interferers + 1))
     .assign(required_signal_strength_db=lambda df: df.interference_dB + default_noise_dB + safe_snr_dB)
-    .assign(max_safe_distance_m=lambda df: df.required_signal_strength_db.apply(lambda ser: data.query(f"RSSIdBm > {ser}").distance.iloc[-1]))
+    #.assign(max_safe_distance_m=lambda df: df.required_signal_strength_db.apply(lambda ser: data.query(f"RSSIdBm > {ser}").distance.iloc[-1]))
 )
 worstcase_interferers
 ```
+
+<!-- #region tags=[] -->
+## Excursus: How dB changes when the base values change
+
+What happens with a number expressed in dB when the underlying absolute nubmer is doubled or halved?
+This should give me some intuition on how much interference or noise has to increase to have significant effects on decodability.
+<!-- #endregion -->
+
+```python
+base_number = pd.Series(2 ** np.arange(0, 8, 0.5))
+base_vs_dB = pd.DataFrame({"base": base_number, "dB": 10 * np.log10(base_number)})
+
+# fig, (left, right) = plt.subplots(1, 2, figsize=(24, 4))
+base_vs_dB.plot(x="base", y="dB") #, ax=left)
+# right.axis('off')
+# right.table(cellText=base_vs_dB.round(2).values, colLabels=base_vs_dB.columns, loc='center')
+base_vs_dB.T
+```
+
+Result: Follow the rule of thumb **"doubling the base number adds 3 dB"**.
+
+Thus, halving the base number subtracts 3 dB.
+
+So, if there is *interference equal to the noise floor* (currently -98 dBm), then the SINR in dBm is *3 dB lower* than without any interference.
